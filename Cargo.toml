@@ -1,0 +1,7 @@
+[package]
+name = "machine_learning_basics"
+version = "0.1.0"
+authors = ["torstein <t.soernes@gmail.com>"]
+
+[dependencies]
+ndarray = "0.11.2"
