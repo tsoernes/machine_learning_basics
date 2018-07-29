@@ -1,6 +1,9 @@
 # Machine learning basics
 
-This repository contains implementations of basic machine learning algorithms in plain Rust. All algorithms are implemented from scratch without using additional machine learning libraries. The intention of these notebooks is to provide a basic understanding of the algorithms and their underlying structure, *not* to provide the most efficient implementations. 
+This repository contains implementations of basic machine learning algorithms in plain Rust. 
+All algorithms are implemented from scratch without using additional machine learning libraries.
+The intention is to provide a basic understanding of the algorithms and their underlying structure,
+*not* to provide the most efficient implementations. 
 
 <!-- - [Linear Regression](linear_regression.ipynb) -->
 <!-- - [Linear Regression](src/linear_regression.rs) -->
@@ -16,7 +19,7 @@ This repository contains implementations of basic machine learning algorithms in
   
 ## Feedback
 
-If you have a favorite algorithm that should be included or spot a mistake in one of the notebooks, please let me know by creating a new issue.
+If you have a favorite algorithm that should be included or spot a mistake, please let me know by creating a new issue.
 
 ## License
 
