@@ -1,8 +1,28 @@
 use ndarray::*;
 use num_traits::identities::Zero;
+use num_traits::Float;
+use quickersort;
 use rand::{thread_rng, ChaChaRng, Rng, SeedableRng};
 use std::fmt::Debug;
 use std::str::FromStr;
+
+pub fn mean<D: Dimension>(arr: &Array<f64, D>) -> f64 {
+    arr.scalar_sum() / arr.len() as f64
+}
+
+/// Argument sort of a 1D array of floats
+pub fn argsort_floats_1d<E: Float>(arr: &Array1<E>) -> Array1<usize> {
+    let mut zipped: Array1<(usize, &E)> = arr.into_iter().enumerate().collect();
+
+    quickersort::sort_by(
+        &mut zipped.as_slice_mut().unwrap(),
+        &|(_, x): &(_, &E), (_, y): &(_, &E)| match x.partial_cmp(y) {
+            Some(ord) => ord,
+            None => panic!("Attempting to sort NaN's"),
+        },
+    );
+    zipped.map(|(i, _)| *i)
+}
 
 #[derive(Debug)]
 pub struct Dataset<X, Y> {

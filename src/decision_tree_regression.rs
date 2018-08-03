@@ -1,7 +1,7 @@
 use csv;
 use ndarray::*;
 use std::f64;
-use utils::shuffle_split;
+use utils::{mean, shuffle_split};
 
 enum TreeNode {
     Leaf {
@@ -115,10 +115,6 @@ impl TreeNode {
     }
 }
 
-fn mean<D: Dimension>(arr: &Array<f64, D>) -> f64 {
-    arr.scalar_sum() / arr.len() as f64
-}
-
 /// Split the data set into two; the left set containing the entries with the given feature
 /// valued less than the threshold, and the right set the entries greater than
 /// the threshold.
@@ -192,12 +188,15 @@ fn get_cost(y_left: &Array1<f64>, y_right: &Array1<f64>) -> f64 {
 /// build the decision tree with the given parameters
 /// and test how the decision tree performs.
 /// TODO load boston into python original; compare results
-pub fn run(max_depth: usize, min_samples: usize, rng_seed: Option<[u8; 32]>) {
+pub fn run(
+    max_depth: usize,
+    min_samples: usize,
+    train_test_split: f64,
+    rng_seed: Option<[u8; 32]>,
+) {
     let file_path = "datasets/boston.csv";
-    let n_samples = 333;
-    let train_test_split = 0.9;
     let mut rdr = csv::Reader::from_path(file_path).unwrap();
-
+    let n_samples = rdr.records().count();
     let n_features = rdr.headers().unwrap().len() - 1;
     let mut data_x: Array2<f64> = Array::zeros((n_samples, n_features + 1));
     let mut data_y: Array1<f64> = Array::zeros(n_samples);
