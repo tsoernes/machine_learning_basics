@@ -21,7 +21,7 @@ const RNG_SEED: [u8; 32] = [0; 32];
 arg_enum! {
     #[derive(PartialEq, Debug)]
     pub enum Algo {
-        DecisionTree,
+        DTR,
         KNN,
     }
 }
@@ -29,6 +29,8 @@ arg_enum! {
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ML Basics")]
 pub struct Opt {
+    // DTR: Decision Tree Regression
+    // KNN: K Nearest Neighbors
     #[structopt(raw(possible_values = "&Algo::variants()", case_insensitive = "true"))]
     algo: Algo,
 
@@ -58,9 +60,7 @@ fn main() {
     let rng_seed = if opt.rand_rng { None } else { Some(RNG_SEED) };
     let tts = opt.train_test_split;
     match opt.algo {
-        Algo::DecisionTree => {
-            decision_tree_regression::run(opt.max_depth, opt.min_samples, tts, rng_seed)
-        }
+        Algo::DTR => decision_tree_regression::run(opt.max_depth, opt.min_samples, tts, rng_seed),
         Algo::KNN => k_nearest_neighbors::run(opt.k, tts, rng_seed),
     }
 }
