@@ -1,8 +1,7 @@
-use super::RNG_SEED;
 use csv;
 use ndarray::*;
-use rand::{thread_rng, ChaChaRng, Rng, SeedableRng};
 use std::f64;
+use utils::shuffle_split;
 
 enum TreeNode {
     Leaf {
@@ -24,10 +23,6 @@ struct DataSplit {
     y_left: Array1<f64>,
     x_right: Array2<f64>,
     y_right: Array1<f64>,
-}
-
-fn mean<D: Dimension>(arr: &Array<f64, D>) -> f64 {
-    arr.scalar_sum() / arr.len() as f64
 }
 
 impl TreeNode {
@@ -120,8 +115,12 @@ impl TreeNode {
     }
 }
 
-/// Split the data set into two; the left set containing the entries with features
-/// less than the threshold, and the right set the entries with features greater than
+fn mean<D: Dimension>(arr: &Array<f64, D>) -> f64 {
+    arr.scalar_sum() / arr.len() as f64
+}
+
+/// Split the data set into two; the left set containing the entries with the given feature
+/// valued less than the threshold, and the right set the entries greater than
 /// the threshold.
 fn split(x: &Array2<f64>, y: &Array1<f64>, feature_idx: usize, threshold: f64) -> DataSplit {
     let (mut lt, mut gt): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
@@ -193,58 +192,38 @@ fn get_cost(y_left: &Array1<f64>, y_right: &Array1<f64>) -> f64 {
 /// build the decision tree with the given parameters
 /// and test how the decision tree performs.
 /// TODO load boston into python original; compare results
-pub fn run(max_depth: usize, min_samples: usize) {
+pub fn run(max_depth: usize, min_samples: usize, rng_seed: Option<[u8; 32]>) {
     let file_path = "datasets/boston.csv";
-    let n_samples: usize = 333; // Data set above has 333 entries
-    let n_features = 14;
-    // Use 90 % of the data set for training and 10 % for testing
+    let n_samples = 333;
     let train_test_split = 0.9;
     let mut rdr = csv::Reader::from_path(file_path).unwrap();
 
-    let mut data: Array2<f64> = Array::zeros((n_samples, n_features + 1));
+    let n_features = rdr.headers().unwrap().len() - 1;
+    let mut data_x: Array2<f64> = Array::zeros((n_samples, n_features + 1));
+    let mut data_y: Array1<f64> = Array::zeros(n_samples);
     for (i, result) in rdr.records().enumerate() {
-        let row: Array1<f64> = result
-            .unwrap()
-            .into_iter()
+        let r = result.unwrap();
+        // println!("{}, {:?}", i, r);
+        let y: f64 = r.get(n_features).expect("idx").parse().expect("parse");
+        data_y[[i]] = y;
+        let x: Array1<f64> = r.into_iter()
+            .take(n_features)
             .map(|e| e.parse().unwrap())
             .collect();
-        data.slice_mut(s![i, ..]).assign(&row);
+        data_x.slice_mut(s![i, ..-1]).assign(&x);
     }
+    // println!("{:?}, {:?}", data_x, data_y);
+    let dataset = shuffle_split(data_x, data_y, train_test_split, rng_seed);
+    // println!("{:?}", dataset);
 
-    // Shuffle the data set
-    let mut indecies: Vec<usize> = (0..n_samples).collect();
-    let mut rng = ChaChaRng::from_seed(RNG_SEED);
-    // let mut rng = thread_rng();
-    rng.shuffle(&mut indecies);
-    let data = data.select(Axis(0), &indecies);
-
-    // Split data set into test and training set.
-    // Split sets into features (input) x and targets y
-    let n_train = (train_test_split * n_samples as f64) as usize;
-    let n_test = n_samples - n_train;
-    let mut x_train: Array2<f64> = Array::zeros((n_train, n_features));
-    let mut y_train: Array1<f64> = Array::zeros(n_train);
-    let mut x_test: Array2<f64> = Array::zeros((n_test, n_features));
-    let mut y_test: Array1<f64> = Array::zeros(n_test);
-    for (i, row) in data.outer_iter().enumerate() {
-        if i < n_train {
-            x_train.slice_mut(s![i, ..]).assign(&row.slice(s!(..-1)));
-            y_train.slice_mut(s![i]).assign(&row.slice(s!(-1)));
-        } else {
-            x_test
-                .slice_mut(s![i - n_train, ..])
-                .assign(&row.slice(s!(..-1)));
-            y_test.slice_mut(s![i - n_train]).assign(&row.slice(s!(-1)));
-        };
-    }
-
-    let dtree = TreeNode::new(x_train, y_train, max_depth, min_samples);
+    let dtree = TreeNode::new(dataset.x_train, dataset.y_train, max_depth, min_samples);
     // Evaluate decision tree performance; in the case of regression we
-    // often use average mean squared error
+    // often use mean squared error
+    let n_test = dataset.y_test.len();
     let mut mse = 0.0;
     for i in 0..n_test {
-        let result = dtree.predict(x_test.slice(s![i, ..]));
-        mse += (y_test[[i]] - result).powf(2.0);
+        let result = dtree.predict(dataset.x_test.slice(s![i, ..]));
+        mse += (dataset.y_test[[i]] - result).powf(2.0);
     }
     mse *= 1.0 / n_test as f64;
     println!("{:?}", mse);
