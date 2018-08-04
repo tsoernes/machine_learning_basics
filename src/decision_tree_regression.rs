@@ -127,15 +127,11 @@ fn split(x: &Array2<f64>, y: &Array1<f64>, feature_idx: usize, threshold: f64) -
             gt.push(i);
         }
     }
-    let xl = x.select(Axis(0), &lt);
-    let yl = y.select(Axis(0), &lt);
-    let xr = x.select(Axis(0), &gt);
-    let yr = y.select(Axis(0), &gt);
     DataSplit {
-        x_left: xl,
-        y_left: yl,
-        x_right: xr,
-        y_right: yr,
+        x_left: x.select(Axis(0), &lt),
+        y_left: y.select(Axis(0), &lt),
+        x_right: x.select(Axis(0), &gt),
+        y_right: y.select(Axis(0), &gt),
     }
 }
 
@@ -162,11 +158,12 @@ fn best_split(x: Array2<f64>, y: Array1<f64>) -> (usize, f64, DataSplit) {
     (best_feature_idx, best_threshold, best_dataset)
 }
 
-/// The Mean Squared Error for a given split. The MSE for each subbranch is
+/// The Mean Squared Error for a given split, pretending that each node after the split
+/// is a terminal node. The MSE for each subbranch is
 /// normalized by how many samples end up in the branch and then added together.
 fn get_cost(y_left: &Array1<f64>, y_right: &Array1<f64>) -> f64 {
     // The MSE on the given targets (which are from the training data set),
-    // provided the node is a terminal node
+    // assuming the node is a terminal node
     fn mse(y: &Array1<f64>, n: usize) -> f64 {
         let inv = 1.0 / n as f64;
         let y_hat = inv * y.scalar_sum();
@@ -196,7 +193,7 @@ pub fn run(
 ) {
     let file_path = "datasets/boston.csv";
     let mut rdr = csv::Reader::from_path(file_path).unwrap();
-    let n_samples = rdr.records().count();
+    let n_samples = 333; // rdr.records().count();
     let n_features = rdr.headers().unwrap().len() - 1;
     let mut data_x: Array2<f64> = Array::zeros((n_samples, n_features + 1));
     let mut data_y: Array1<f64> = Array::zeros(n_samples);
@@ -211,9 +208,7 @@ pub fn run(
             .collect();
         data_x.slice_mut(s![i, ..-1]).assign(&x);
     }
-    // println!("{:?}, {:?}", data_x, data_y);
     let dataset = shuffle_split(data_x, data_y, train_test_split, rng_seed);
-    // println!("{:?}", dataset);
 
     let dtree = TreeNode::new(dataset.x_train, dataset.y_train, max_depth, min_samples);
     // Evaluate decision tree performance; in the case of regression we

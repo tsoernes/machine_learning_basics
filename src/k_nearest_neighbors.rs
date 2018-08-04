@@ -2,6 +2,7 @@ use csv;
 use ndarray::*;
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::ops::AddAssign;
 use utils::{argsort_floats_1d, shuffle_split};
 
 /// Computes the euclidean distance between each example in the training data
@@ -9,8 +10,7 @@ use utils::{argsort_floats_1d, shuffle_split};
 fn euclid_distance(data_x: &Array2<f64>, example: &ArrayView1<f64>) -> Array1<f64> {
     let mut x1: Array2<f64> = data_x - example;
     x1.mapv_inplace(|e| e.powf(2.0));
-    // TODO can this be done inplace?
-    let mut x3: Array1<f64> = x1.outer_iter().map(|row| row.scalar_sum()).collect();
+    let mut x3: Array1<f64> = x1.map_axis(Axis(0), |row| row.scalar_sum());
     x3.mapv_inplace(|e| e.sqrt());
     x3
 }
@@ -24,17 +24,16 @@ fn predict<Y: Clone + Hash + Eq>(
     k: usize,
 ) -> Y {
     let dists = euclid_distance(data_x, example);
-    let dists_ix = argsort_floats_1d(&dists);
+    let mut dists_ix = argsort_floats_1d(&dists);
     // Indecies of the 'k' smallest distance data entries
-    let k_dists_ix: ArrayView1<usize> = dists_ix.slice(s![..k]);
+    dists_ix.slice_inplace(s![..k]);
     // Labels of 'k' nearest entries
-    let k_ys = k_dists_ix.map(|ix| data_y[[*ix]].clone());
+    let k_ys: Array1<Y> = dists_ix.map(|ix| data_y[[*ix]].clone());
     // Group targets by their count
     let mut y_counts: HashMap<Y, usize> = HashMap::new();
-    for y in k_ys.into_iter() {
+    for y in k_ys.iter() {
         if y_counts.contains_key(&y) {
-            let inc = y_counts.get(&y).unwrap() + 1;
-            y_counts.insert(y.clone(), inc);
+            y_counts.get_mut(&y).unwrap().add_assign(1);
         } else {
             // TODO should this not be possible without cloning, since its into_iter
             y_counts.insert(y.clone(), 1);
