@@ -11,7 +11,7 @@ and how to port ML algorithms to Rust, *not* to provide the most efficient imple
 <!-- - [Linear Regression](src/linear_regression.rs) -->
 <!-- - [Logistic Regression](logistic_regression.ipynb) -->
 <!-- - [Perceptron](perceptron.ipynb) -->
-- [K Nearest Neighbor](src/k_nearest_neighbour.rs) e.g. `cargo run -- knn -k 5`
+- [K Nearest Neighbor](src/k_nearest_neighbours.rs) e.g. `cargo run -- knn -k 5`
 <!-- - [k-Means clustering](kmeans.ipynb) -->
 <!-- - [Simple neural network with one hidden layer](simple_neural_net.ipynb) -->
 <!-- - [Multinomial Logistic Regression](softmax_regression.ipynb) -->
