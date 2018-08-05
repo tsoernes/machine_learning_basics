@@ -1,9 +1,10 @@
+use super::RngSeed;
 use csv;
 use ndarray::*;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::AddAssign;
-use utils::{argsort_floats_1d, shuffle_split};
+use utils::{argsort_floats_1d, shuffle2, train_test_split};
 
 /// Computes the euclidean distance between each example in the training data
 /// and a new input example
@@ -47,7 +48,7 @@ fn predict<Y: Clone + Hash + Eq>(
         .0
 }
 
-pub fn run(k: usize, train_test_split: f64, rng_seed: Option<[u8; 32]>) {
+pub fn run(k: usize, train_test_split_ratio: f64, rng_seed: Option<RngSeed>) {
     // Load data from csv file into arrays
     let file_path = "datasets/digits.csv";
     let mut rdr = csv::Reader::from_path(file_path).unwrap();
@@ -67,7 +68,8 @@ pub fn run(k: usize, train_test_split: f64, rng_seed: Option<[u8; 32]>) {
             .collect();
         data_x.slice_mut(s![i, ..-1]).assign(&x);
     }
-    let dataset = shuffle_split(data_x, data_y, train_test_split, rng_seed);
+    let (data_x, data_y) = shuffle2(data_x, data_y, rng_seed);
+    let dataset = train_test_split(data_x, data_y, train_test_split_ratio);
 
     // Compute accuracy on test set
     let y_preds: Array1<u32> = dataset

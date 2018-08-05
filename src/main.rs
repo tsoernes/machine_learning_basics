@@ -1,6 +1,8 @@
 #![macro_use]
 extern crate csv;
+#[macro_use]
 extern crate ndarray;
+extern crate ndarray_rand;
 extern crate serde;
 #[macro_use]
 extern crate structopt;
@@ -12,11 +14,13 @@ extern crate quickersort;
 
 mod decision_tree_regression;
 mod k_nearest_neighbors;
+mod logistic_regression;
 mod utils;
 
 use structopt::StructOpt;
 
-const RNG_SEED: [u8; 32] = [0; 32];
+type RngSeed = [u8; 32];
+const RNG_SEED: RngSeed = [0; 32];
 
 arg_enum! {
     #[derive(PartialEq, Debug)]
@@ -52,13 +56,13 @@ pub struct Opt {
 
     /// Train test data set split percent
     #[structopt(long = "tts", default_value = "0.9")]
-    train_test_split: f64,
+    train_test_split_ratio: f64,
 }
 
 fn main() {
     let opt = Opt::from_args();
     let rng_seed = if opt.rand_rng { None } else { Some(RNG_SEED) };
-    let tts = opt.train_test_split;
+    let tts = opt.train_test_split_ratio;
     match opt.algo {
         Algo::DTR => decision_tree_regression::run(opt.max_depth, opt.min_samples, tts, rng_seed),
         Algo::KNN => k_nearest_neighbors::run(opt.k, tts, rng_seed),

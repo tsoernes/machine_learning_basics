@@ -4,11 +4,12 @@ version = "0.1.0"
 authors = ["torstein <t.soernes@gmail.com>"]
 
 [dependencies]
-ndarray = "0.11.2"
 csv = "1.0.0"
 serde = "1.0.70"
 structopt = "0.2.10"
-rand = "0.5.4"
+rand = "^0.5.4"
 num-traits = "0.2.5"
 clap = "2.32.0"
 quickersort = "3.0.1"
+ndarray = { git = "https://github.com/bluss/ndarray.git" }
+ndarray-rand = { git = "https://github.com/bluss/ndarray.git" }

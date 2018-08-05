@@ -1,7 +1,10 @@
+use super::RngSeed;
 use csv;
 use ndarray::*;
+use ndarray_rand::RandomExt;
+use rand::distributions::StandardNormal;
 use std::f64;
-use utils::{mean, shuffle_split};
+use utils::{mean, shuffle2, train_test_split};
 
 enum TreeNode {
     Leaf {
@@ -113,6 +116,18 @@ impl TreeNode {
             }
         }
     }
+
+    /// Evaluate decision tree performance on a data set
+    pub fn test(&self, data_x: Array2<f64>, data_y: Array1<f64>) {
+        let n_test = data_y.len();
+        let mut mse = 0.0;
+        for i in 0..n_test {
+            let result = self.predict(data_x.slice(s![i, ..]));
+            mse += (data_y[[i]] - result).powf(2.0);
+        }
+        mse *= 1.0 / n_test as f64;
+        println!("{:?}", mse);
+    }
 }
 
 /// Split the data set into two; the left set containing the entries with the given feature
@@ -188,8 +203,8 @@ fn get_cost(y_left: &Array1<f64>, y_right: &Array1<f64>) -> f64 {
 pub fn run(
     max_depth: usize,
     min_samples: usize,
-    train_test_split: f64,
-    rng_seed: Option<[u8; 32]>,
+    train_test_split_ratio: f64,
+    rng_seed: Option<RngSeed>,
 ) {
     let file_path = "datasets/boston.csv";
     let mut rdr = csv::Reader::from_path(file_path).unwrap();
@@ -208,17 +223,23 @@ pub fn run(
             .collect();
         data_x.slice_mut(s![i, ..-1]).assign(&x);
     }
-    let dataset = shuffle_split(data_x, data_y, train_test_split, rng_seed);
-
+    let (data_x, data_y) = shuffle2(data_x, data_y, rng_seed);
+    let dataset = train_test_split(data_x, data_y, train_test_split_ratio);
     let dtree = TreeNode::new(dataset.x_train, dataset.y_train, max_depth, min_samples);
-    // Evaluate decision tree performance; in the case of regression we
-    // often use mean squared error
-    let n_test = dataset.y_test.len();
-    let mut mse = 0.0;
-    for i in 0..n_test {
-        let result = dtree.predict(dataset.x_test.slice(s![i, ..]));
-        mse += (dataset.y_test[[i]] - result).powf(2.0);
-    }
-    mse *= 1.0 / n_test as f64;
-    println!("{:?}", mse);
+    dtree.test(dataset.x_test, dataset.y_test);
+}
+
+/// Same benchmark as in original repo
+pub fn run_rand(
+    max_depth: usize,
+    min_samples: usize,
+    train_test_split_ratio: f64,
+    _rng_seed: Option<RngSeed>,
+) {
+    let x: Array1<f64> = Array::linspace(3.0, 3.0, 400);
+    let y = x.mapv(|e| e.powf(2.0)) + Array::random(400, StandardNormal);
+    let x = x.into_shape((400, 1)).unwrap();
+    let dataset = train_test_split(x, y, train_test_split_ratio);
+    let dtree = TreeNode::new(dataset.x_train, dataset.y_train, max_depth, min_samples);
+    dtree.test(dataset.x_test, dataset.y_test);
 }
