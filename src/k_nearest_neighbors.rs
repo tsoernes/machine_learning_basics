@@ -12,7 +12,7 @@ fn euclid_distance(data_x: &Array2<f64>, example: &ArrayView1<f64>) -> Array1<f6
     let mut x1: Array2<f64> = data_x - example;
     x1.mapv_inplace(|e| e.powf(2.0));
     let mut x3: Array1<f64> = x1.map_axis(Axis(0), |row| row.scalar_sum());
-    x3.mapv_inplace(|e| e.sqrt());
+    x3.mapv_inplace(f64::sqrt);
     x3
 }
 

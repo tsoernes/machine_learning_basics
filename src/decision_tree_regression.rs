@@ -214,7 +214,6 @@ pub fn run(
     let mut data_y: Array1<f64> = Array::zeros(n_samples);
     for (i, result) in rdr.records().enumerate() {
         let r = result.unwrap();
-        // println!("{}, {:?}", i, r);
         let y: f64 = r.get(n_features).expect("idx").parse().expect("parse");
         data_y[[i]] = y;
         let x: Array1<f64> = r.into_iter()
