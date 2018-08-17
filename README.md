@@ -9,7 +9,7 @@ and how to port ML algorithms to Rust, *not* to provide the most efficient imple
 
 <!-- - [Linear Regression](linear_regression.ipynb) -->
 <!-- - [Linear Regression](src/linear_regression.rs) -->
-<!-- - [Logistic Regression](logistic_regression.ipynb) -->
+- [Logistic Regression](src/logistic_regression.rs) e.g. `cargo run -- lgr --n_iters 600 --learning_rate 0.009`
 <!-- - [Perceptron](perceptron.ipynb) -->
 - [K Nearest Neighbor](src/k_nearest_neighbors.rs) e.g. `cargo run -- knn -k 5`
 <!-- - [k-Means clustering](kmeans.ipynb) -->
@@ -18,6 +18,17 @@ and how to port ML algorithms to Rust, *not* to provide the most efficient imple
 <!-- - [Decision tree for classification](decision_tree_classification.ipynb) -->
 - [Decision tree for regression](src/decision_tree_regression.rs) e.g. `cargo run -- dtr --max_depth 4 --min_samples 2`
   
+## Contribute
+Still missing:
+
+- Linear Regression
+- Perceptron
+- k-Means clustering
+- Simple neural network with one hidden layer
+- Multinomial Logistic Regression
+- Decision tree for classification
+- Reinforcement learning (e.g. Q-learning with a linear neural network)
+- Support Vector Machine
   
 ## Feedback
 

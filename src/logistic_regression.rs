@@ -47,6 +47,9 @@ impl LogisticRegressor {
         lgr
     }
 
+    /// Given a matrix [n_samples, n_features] of examples 'x',
+    /// for each examples (row) compute the sigmoid of a linear combination
+    /// of the example. Returns a matrix of size [n_samples]
     fn act<S: Data<Elem = f64>>(&self, x: &ArrayBase<S, Ix2>) -> Array1<f64> {
         let mut out = x.dot(&self.weights) + self.bias;
         out.mapv_inplace(sigmoid);
