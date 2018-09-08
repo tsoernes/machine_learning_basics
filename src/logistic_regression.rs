@@ -1,11 +1,6 @@
 use ndarray::*;
 use std::ops::SubAssign;
-use utils::{make_blobs, shuffle2, train_test_split};
-
-/// The sigmoid function, also known as the logistic function
-fn sigmoid(a: f64) -> f64 {
-    1.0 / (1.0 + (-a).exp())
-}
+use utils::{make_blobs, shuffle2, sigmoid, train_test_split};
 
 struct LogisticRegressor {
     weights: Array1<f64>,

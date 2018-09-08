@@ -1,3 +1,4 @@
+use super::RngSeed;
 use ndarray::*;
 use ndarray_rand::RandomExt;
 use num_traits::identities::Zero;
@@ -9,11 +10,19 @@ use rand::{thread_rng, ChaChaRng, Rng, SeedableRng};
 use std::fmt::Debug;
 use std::str::FromStr;
 
+/// Computes the euclidean distance (aka L2 distance)
+/// between two vectors
+pub fn l2_distance(vec1: &ArrayView1<f64>, vec2: &ArrayView1<f64>) -> f64 {
+    let mut x1: Array1<f64> = vec1 - vec2;
+    x1.mapv_inplace(|e| e.powf(2.0));
+    x1.scalar_sum().sqrt()
+}
+
 pub fn mean<D: Dimension>(arr: &Array<f64, D>) -> f64 {
     arr.scalar_sum() / arr.len() as f64
 }
 
-/// Argument sort of a 1D array of floats
+/// Argsort of a 1D array of floats
 pub fn argsort_floats_1d<E: Float>(arr: &Array1<E>) -> Array1<usize> {
     let mut zipped: Array1<(usize, &E)> = arr.into_iter().enumerate().collect();
 
@@ -36,11 +45,17 @@ pub struct Dataset<X, Y> {
 }
 
 /// Shuffle two arrays in unison
-pub fn shuffle2<E1: Copy, E2: Copy, D1: Dimension + RemoveAxis, D2: Dimension + RemoveAxis>(
+pub fn shuffle2<E1, E2, D1, D2>(
     arr1: Array<E1, D1>,
     arr2: Array<E2, D2>,
-    rng_seed: Option<[u8; 32]>,
-) -> (Array<E1, D1>, Array<E2, D2>) {
+    rng_seed: Option<RngSeed>,
+) -> (Array<E1, D1>, Array<E2, D2>)
+where
+    E1: Copy,
+    E2: Copy,
+    D1: Dimension + RemoveAxis,
+    D2: Dimension + RemoveAxis,
+{
     let mut indecies: Vec<usize> = (0..arr1.len_of(Axis(0))).collect();
     match rng_seed {
         Some(seed) => {
@@ -56,11 +71,15 @@ pub fn shuffle2<E1: Copy, E2: Copy, D1: Dimension + RemoveAxis, D2: Dimension + 
 }
 
 /// Shuffle the data set, then split into training and test set with ratio 'train_test_split_ratio'.
-pub fn train_test_split<X: Copy + FromStr + Zero + Debug, Y: Copy + FromStr + Zero + Debug>(
+pub fn train_test_split<X, Y>(
     data_x: Array2<X>,
     data_y: Array1<Y>,
     train_test_split_ratio: f64,
-) -> Dataset<X, Y> {
+) -> Dataset<X, Y>
+where
+    X: Copy + FromStr + Zero + Debug,
+    Y: Copy + FromStr + Zero + Debug,
+{
     let n_samples = data_x.rows();
     let n_features = data_x.cols();
     let n_train = (train_test_split_ratio * n_samples as f64) as usize;
@@ -122,4 +141,9 @@ pub fn make_blobs(
         n_added += n;
     }
     shuffle2(x, y, None)
+}
+
+/// The sigmoid function, also known as the logistic function
+pub fn sigmoid(a: f64) -> f64 {
+    1.0 / (1.0 + (-a).exp())
 }

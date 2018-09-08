@@ -13,8 +13,10 @@ extern crate clap;
 extern crate quickersort;
 
 mod decision_tree_regression;
+mod k_means;
 mod k_nearest_neighbors;
 mod logistic_regression;
+mod support_vector_machine;
 mod utils;
 
 use structopt::StructOpt;
@@ -27,14 +29,20 @@ arg_enum! {
     pub enum Algo {
         DTR,
         KNN,
-        LGR
+        LGR,
+        SVM,
+        KMC
     }
 }
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ML Basics")]
 pub struct Opt {
-    /// DTR: Decision Tree Regression. KNN: K Nearest Neighbors. LGR: Logistic Regression.
+    /// DTR: Decision Tree Regression.
+    /// KNN: K Nearest Neighbors.
+    /// LGR: Logistic Regression.
+    /// SVM: Support Vector Machine.
+    /// KMC: K Means Clustering.
     #[structopt(raw(possible_values = "&Algo::variants()", case_insensitive = "true"))]
     algo: Algo,
 
@@ -46,7 +54,7 @@ pub struct Opt {
     #[structopt(long = "min_samples", default_value = "2")]
     min_samples: usize,
 
-    /// K Nearest Neighors: K
+    /// 'K' parameter for K Nearest Neighors and K Means
     #[structopt(short = "k", default_value = "5")]
     k: usize,
 
@@ -75,5 +83,7 @@ fn main() {
         Algo::DTR => decision_tree_regression::run(opt.max_depth, opt.min_samples, tts, rng_seed),
         Algo::KNN => k_nearest_neighbors::run(opt.k, tts, rng_seed),
         Algo::LGR => logistic_regression::run(opt.n_iters, opt.learning_rate, tts, rng_seed),
+        Algo::SVM => logistic_regression::run(opt.n_iters, opt.learning_rate, tts, rng_seed),
+        Algo::KMC => k_means::run(opt.k, tts, rng_seed),
     }
 }
