@@ -1,4 +1,4 @@
-4# Machine learning basics
+## Machine learning basics
 
 This repository contains implementations of basic machine learning algorithms in plain Rust. 
 It is a fork of, and follows the spirit of, the original 
@@ -13,7 +13,6 @@ and how to port ML algorithms to Rust, *not* to provide the most efficient imple
 <!-- - [Perceptron](perceptron.ipynb) -->
 - [K Nearest Neighbor](src/k_nearest_neighbors.rs) e.g. `cargo run -- knn -k 5`
 - [K Means](src/k_means.rs) e.g. `cargo run -- kmc -k 4`
-<!-- - [k-Means clustering](kmeans.ipynb) -->
 <!-- - [Simple neural network with one hidden layer](simple_neural_net.ipynb) -->
 <!-- - [Multinomial Logistic Regression](softmax_regression.ipynb) -->
 <!-- - [Decision tree for classification](decision_tree_classification.ipynb) -->
@@ -24,7 +23,6 @@ Still missing:
 
 - Linear Regression
 - Perceptron
-- k-Means clustering
 - Simple neural network with one hidden layer
 - Multinomial Logistic Regression
 - Decision tree for classification
