@@ -1,22 +1,21 @@
 #![macro_use]
 extern crate csv;
-#[macro_use]
 extern crate ndarray;
 extern crate ndarray_rand;
-extern crate serde;
-#[macro_use]
-extern crate structopt;
 extern crate num_traits;
 extern crate rand;
+extern crate rand_chacha;
+extern crate serde;
+extern crate structopt;
 #[macro_use]
 extern crate clap;
-extern crate quickersort;
 
 mod decision_tree_regression;
 mod k_means;
 mod k_nearest_neighbors;
 mod logistic_regression;
 mod support_vector_machine;
+mod test;
 mod utils;
 
 use structopt::StructOpt;

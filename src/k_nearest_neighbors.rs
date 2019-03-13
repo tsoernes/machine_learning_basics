@@ -27,7 +27,7 @@ fn predict<Y: Clone + Hash + Eq>(
     let dists = euclid_distance(data_x, example);
     let mut dists_ix = argsort_floats_1d(&dists);
     // Indecies of the 'k' smallest distance data entries
-    dists_ix.slice_inplace(s![..k]);
+    dists_ix.slice_collapse(s![..k]);
     // Labels of 'k' nearest entries
     let k_ys: Array1<Y> = dists_ix.map(|ix| data_y[[*ix]].clone());
     // Group targets by their count
@@ -62,7 +62,8 @@ pub fn run(k: usize, train_test_split_ratio: f64, rng_seed: Option<RngSeed>) {
         // The last entry of each row in the csv file is the target/label
         let y = r.get(n_features).expect("idx").parse().expect("parse");
         data_y[[i]] = y;
-        let x: Array1<f64> = r.into_iter()
+        let x: Array1<f64> = r
+            .into_iter()
             .take(n_features)
             .map(|e| e.parse().unwrap())
             .collect();
@@ -77,10 +78,14 @@ pub fn run(k: usize, train_test_split_ratio: f64, rng_seed: Option<RngSeed>) {
         .outer_iter()
         .map(|example| predict(&dataset.x_train, &dataset.y_train, &example, k))
         .collect();
-    let n_eq = y_preds.into_iter().zip(dataset.y_test.into_iter()).fold(
-        0,
-        |acc, (y_pred, y_targ)| if y_pred == y_targ { acc + 1 } else { acc },
-    );
+    let n_eq =
+        y_preds
+            .into_iter()
+            .zip(dataset.y_test.into_iter())
+            .fold(
+                0,
+                |acc, (y_pred, y_targ)| if y_pred == y_targ { acc + 1 } else { acc },
+            );
     let test_acc: f64 = (n_eq as f64) / (y_preds.len() as f64) * 100.00;
     println!("{}", test_acc);
 }

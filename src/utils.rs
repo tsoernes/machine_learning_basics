@@ -3,10 +3,11 @@ use ndarray::*;
 use ndarray_rand::RandomExt;
 use num_traits::identities::Zero;
 use num_traits::Float;
-use quickersort;
 use rand::distributions::StandardNormal;
 use rand::distributions::Uniform;
-use rand::{thread_rng, ChaChaRng, Rng, SeedableRng};
+use rand::seq::SliceRandom;
+use rand::{thread_rng, SeedableRng};
+use rand_chacha::ChaChaRng;
 use std::fmt::Debug;
 use std::str::FromStr;
 
@@ -22,17 +23,28 @@ pub fn mean<D: Dimension>(arr: &Array<f64, D>) -> f64 {
     arr.scalar_sum() / arr.len() as f64
 }
 
+/// Argsort of a 1D array
+// pub fn argsort_1d<E: Ord>(arr: &Array1<E>) -> Array1<usize> {
+//     let mut zipped: Array1<(usize, &E)> = arr.into_iter().enumerate().collect();
+//     zipped
+//         .as_slice_mut()
+//         .unwrap()
+//         .sort_unstable_by_key(|&(_, val)| val);
+//     zipped.map(|(idx, _)| *idx)
+// }
+
 /// Argsort of a 1D array of floats
 pub fn argsort_floats_1d<E: Float>(arr: &Array1<E>) -> Array1<usize> {
     let mut zipped: Array1<(usize, &E)> = arr.into_iter().enumerate().collect();
-
-    quickersort::sort_by(
-        &mut zipped.as_slice_mut().unwrap(),
-        &|(_, x): &(_, &E), (_, y): &(_, &E)| match x.partial_cmp(y) {
-            Some(ord) => ord,
-            None => panic!("Attempting to sort NaN's"),
-        },
-    );
+    zipped
+        .as_slice_mut()
+        .unwrap()
+        .sort_unstable_by(
+            &|(_, x): &(_, &E), (_, y): &(_, &E)| match x.partial_cmp(y) {
+                Some(ord) => ord,
+                None => panic!("Attempting to sort NaN's"),
+            },
+        );
     zipped.map(|(i, _)| *i)
 }
 
@@ -44,13 +56,15 @@ pub struct Dataset<X, Y> {
     pub y_test: Array1<Y>,
 }
 
-/// Shuffle two arrays in unison
-pub fn shuffle2<E1, E2, D1, D2>(
-    arr1: Array<E1, D1>,
-    arr2: Array<E2, D2>,
+/// Shuffle the first axis of two arrays in unison
+pub fn shuffle2<B1, B2, E1, E2, D1, D2>(
+    arr1: ArrayBase<B1, D1>,
+    arr2: ArrayBase<B2, D2>,
     rng_seed: Option<RngSeed>,
 ) -> (Array<E1, D1>, Array<E2, D2>)
 where
+    B1: Data<Elem = E1>,
+    B2: Data<Elem = E2>,
     E1: Copy,
     E2: Copy,
     D1: Dimension + RemoveAxis,
@@ -59,16 +73,39 @@ where
     let mut indecies: Vec<usize> = (0..arr1.len_of(Axis(0))).collect();
     match rng_seed {
         Some(seed) => {
-            ChaChaRng::from_seed(seed).shuffle(&mut indecies);
+            indecies.shuffle(&mut ChaChaRng::from_seed(seed));
         }
         _ => {
-            thread_rng().shuffle(&mut indecies);
+            indecies.shuffle(&mut thread_rng());
         }
     };
     let arr1 = arr1.select(Axis(0), &indecies);
     let arr2 = arr2.select(Axis(0), &indecies);
     (arr1, arr2)
 }
+
+/// Shuffle two 1D arrays in place and in unison
+// pub fn shuffle_1d_inplace<E1, E2>(
+//     arr1: &mut Array1<E1>,
+//     arr2: &mut Array1<E2>,
+//     rng_seed: Option<RngSeed>,
+// ) {
+//     let mut indecies: Vec<usize> = (0..arr1.len_of(Axis(0))).collect();
+//     match rng_seed {
+//         Some(seed) => {
+//             let rng = &mut ChaChaRng::from_seed(seed);
+//             arr1.as_slice_mut().unwrap().shuffle(rng);
+//             indecies.shuffle(rng);
+//         }
+//         _ => {
+//             indecies.shuffle(&mut thread_rng());
+//         }
+//     };
+//     for (from, to) in indecies.into_iter().enumerate() {
+//         arr1.swap(from, to);
+//         arr2.swap(from, to);
+//     }
+// }
 
 /// Shuffle the data set, then split into training and test set with ratio 'train_test_split_ratio'.
 pub fn train_test_split<X, Y>(

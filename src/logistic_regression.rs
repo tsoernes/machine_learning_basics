@@ -9,6 +9,10 @@ struct LogisticRegressor {
 
 impl LogisticRegressor {
     /// Construct and train a logistic regressor.
+    /// x: a matrix [n_samples, n_features] of examples
+    /// y: a vector [n_samples] of targets
+    /// n_iters: how many training iterations
+    /// learning_rate: for gradient descent
     pub fn new(
         x: Array2<f64>,
         y: Array1<f64>,
@@ -29,9 +33,9 @@ impl LogisticRegressor {
             // Average cross entropy for data set
             let cost = -scale * crents.scalar_sum();
             // Compute gradients for weights and bias
-            let diff = y_pred - y.clone();
-            let dw: Array1<f64> = scale * diff.dot(&x);
-            let db: f64 = scale * diff.scalar_sum();
+            let err = y_pred - y.clone();
+            let dw: Array1<f64> = scale * err.dot(&x);
+            let db: f64 = scale * err.scalar_sum();
             // Update parameters with (non-stochastic) gradient descent
             lgr.weights.sub_assign(&(learning_rate * dw));
             lgr.bias.sub_assign(learning_rate * db);
@@ -61,7 +65,8 @@ impl LogisticRegressor {
 
     /// Evaluate regressor performance on a data set
     pub fn test(&self, x: &Array2<f64>, y: &Array1<f64>) -> f64 {
-        let y_preds: Array1<f64> = x.outer_iter()
+        let y_preds: Array1<f64> = x
+            .outer_iter()
             .map(|example| self.predict(example))
             .collect();
         let acc = 100.0 - (y - &y_preds).mapv(f64::abs).mean_axis(Axis(0)) * 100.0;

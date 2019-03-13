@@ -9,7 +9,7 @@ and how to port ML algorithms to Rust, *not* to provide the most efficient imple
 
 - [Logistic Regression](src/logistic_regression.rs) e.g. `cargo run -- lgr --n_iters 600 --learning_rate 0.009`
 - [K Nearest Neighbor](src/k_nearest_neighbors.rs) e.g. `cargo run -- knn -k 5`
-- [K Means](src/k_means.rs) e.g. `cargo run -- kmc -k 4`
+- [K Means Clustering](src/k_means.rs) e.g. `cargo run -- kmc -k 4`
 - [Decision tree for regression](src/decision_tree_regression.rs) e.g. `cargo run -- dtr --max_depth 4 --min_samples 2`
   
 ## Contribute
